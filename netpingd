@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+#
+# This file is part of netpingd.
+#
+# netpingd is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# netpingd is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with netpingd.  If not, see <http://www.gnu.org/licenses/>.
+
+# pylint: disable=broad-except
+# pylint: disable=too-few-public-methods
+# pylint: disable=no-self-use
+
+"""Front end checking pings to evaluate the Warwick one-metre telescope network availability"""
+
+import datetime
+import re
+import subprocess
+import Pyro4
+
+PYRO_HOST = '192.168.0.102'
+PYRO_PORT = 9012
+PYRO_NAME = 'netping_daemon'
+
+PING_TIMEOUT = 2
+PING_REGEX = r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
+           + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms'
+
+class NetworkPingDaemon:
+    """Wraps a ping request to google and ngtshead"""
+    def __init__(self):
+        self._regex = re.compile(PING_REGEX)
+
+    def ping(self, address):
+        """Ping an address and return the rtt time in milliseconds"""
+        output = subprocess.check_output(['/usr/bin/ping', '-c1', address], universal_newlines=True,
+                                         timeout=PING_TIMEOUT)
+
+        # The last line of output (ignoring the final newline) contains the ping times
+        times = output.split('\n')[-2]
+        match = self._regex.match(times)
+        if match is None:
+            raise Exception('Failed to parse ping output: ' + output)
+
+        return float(match.group('avg'))
+
+    def last_measurement(self):
+        """Query the latest valid measurement.
+        May return None if no data is available"""
+        try:
+            return {
+                'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'ngtshead': self.ping('ngtshead.warwick.ac.uk'),
+                'google': self.ping('www.google.com'),
+            }
+        except Exception as exception:
+            print('{} ERROR: failed to ping network: {}' \
+                  .format(datetime.datetime.utcnow(), str(exception)))
+            return None
+
+def spawn_daemon():
+    """Spawns the daemon and registers it with Pyro"""
+    Pyro4.config.COMMTIMEOUT = 5
+
+    pyro = Pyro4.Daemon(host=PYRO_HOST, port=PYRO_PORT)
+    netping = NetworkPingDaemon()
+    uri = pyro.register(netping, objectId=PYRO_NAME)
+
+    print('Starting Network ping daemon with Pyro ID:', uri)
+    pyro.requestLoop()
+    print('Stopping Network ping daemon with Pyro ID:', uri)
+
+if __name__ == '__main__':
+    spawn_daemon()
