@@ -39,7 +39,7 @@ PING_TIMEOUT = 2
 PING_REGEX = {
     'onemetre' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
                  + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms',
-    'nites' : r'rtt Minimum = (?P<min>\d+\.\d+)ms, Maximum = (?P<max>\d+\.\d+)ms,' \
+    'nites' : r'Minimum = (?P<min>\d+\.\d+)ms, Maximum = (?P<max>\d+\.\d+)ms,' \
                  + r'Average = (?P<avg>\d+\.\d+)ms' 
     }
 
@@ -51,7 +51,8 @@ class NetworkPingDaemon:
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
-        ping_str = "-n 1" if  platform.system().lower()=="windows" else "-c 1"
+        pltfrm = platform.system().lower()
+        ping_str = "-n 1" if  pltfrm=="windows" else "-c 1"
         output = subprocess.check_output("ping " + ping_str + " " + address)
 
         #if self.instrument == 'onemetre':
@@ -62,7 +63,10 @@ class NetworkPingDaemon:
         #                                     PING_TIMEOUT*1000,address))
         
         # The last line of output (ignoring the final newline) contains the ping times
-        times = output.split('\n')[-2]
+        if pltfrm == 'windows':
+            times = output.split('\r\n')[-2]
+        else:
+            times = output.split('\n')[-2]
         match = self._regex.match(times)
         if match is None:
             raise Exception('Failed to parse ping output: ' + output)
