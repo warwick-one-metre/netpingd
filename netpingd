@@ -52,8 +52,7 @@ class NetworkPingDaemon:
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
         ping_str = "-n 1" if  platform.system().lower()=="windows" else "-c 1"
-        output = subprocess.check_output("ping " + ping_str + " " + host)
-
+        output = subprocess.check_output("ping " + ping_str + " " + address)
 
         #if self.instrument == 'onemetre':
         #    output = subprocess.check_output([PYRO_CONFIG['/usr/bin/ping', '-c1', address],
@@ -90,7 +89,7 @@ def spawn_daemon(instrument):
 
     pyro = Pyro4.Daemon(host=PYRO_CONFIG[instrument][0],
                         port=PYRO_CONFIG[instrument][1])
-    netping = NetworkPingDaemon()
+    netping = NetworkPingDaemon(instrument)
     uri = pyro.register(netping, objectId=PYRO_CONFIG[instrument][2])
 
     print('Starting Network ping daemon with Pyro ID:', uri)
