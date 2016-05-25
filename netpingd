@@ -28,7 +28,7 @@ import Pyro4
 
 PYRO_HOST = '192.168.0.102'
 PYRO_PORT = 9012
-PYRO_NAME = 'netping_daemon'
+PYRO_NAME = 'onemetre_netping_daemon'
 
 PING_TIMEOUT = 2
 PING_REGEX = r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \

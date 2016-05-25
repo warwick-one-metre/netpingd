@@ -25,7 +25,7 @@ import Pyro4
 
 PYRO_HOST = '192.168.0.102'
 PYRO_PORT = 9012
-PYRO_NAME = 'netping_daemon'
+PYRO_NAME = 'onemetre_netping_daemon'
 PYRO_COMM_TIMEOUT = 5
 
 SCRIPT_NAME = os.path.basename(sys.argv[0])
