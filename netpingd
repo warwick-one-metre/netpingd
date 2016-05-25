@@ -18,17 +18,20 @@
 # pylint: disable=broad-except
 # pylint: disable=too-few-public-methods
 # pylint: disable=no-self-use
+# pylint: disable=invalid-name
 
 """Front end checking pings to evaluate the Warwick one-metre telescope network availability"""
 
+import argparse
 import datetime
 import re
 import subprocess
 import Pyro4
 
-PYRO_HOST = '192.168.0.102'
-PYRO_PORT = 9012
-PYRO_NAME = 'onemetre_netping_daemon'
+PYRO_CONFIG = {
+    'nites'    : ('192.168.0.81', 9012, 'nites_netping_daemon'),
+    'onemetre' : ('192.168.0.102', 9012, 'onemetre_netping_daemon')
+    }
 
 PING_TIMEOUT = 2
 PING_REGEX = r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
@@ -66,17 +69,23 @@ class NetworkPingDaemon:
                   .format(datetime.datetime.utcnow(), str(exception)))
             return None
 
-def spawn_daemon():
+def spawn_daemon(instrument):
     """Spawns the daemon and registers it with Pyro"""
     Pyro4.config.COMMTIMEOUT = 5
 
-    pyro = Pyro4.Daemon(host=PYRO_HOST, port=PYRO_PORT)
+    pyro = Pyro4.Daemon(host=PYRO_CONFIG[instrument][0],
+                        port=PYRO_CONFIG[instrument][1])
     netping = NetworkPingDaemon()
-    uri = pyro.register(netping, objectId=PYRO_NAME)
+    uri = pyro.register(netping, objectId=PYRO_CONFIG[instrument][2])
 
     print('Starting Network ping daemon with Pyro ID:', uri)
     pyro.requestLoop()
     print('Stopping Network ping daemon with Pyro ID:', uri)
 
 if __name__ == '__main__':
-    spawn_daemon()
+    description = 'Net Pinging Server'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('instrument', choices=['onemetre', 'nites'], help='Select an instrument')
+    args = parser.parse_args()
+    spawn_daemon(args.instrument)
+
