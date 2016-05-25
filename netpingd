@@ -22,10 +22,12 @@
 
 """Front end checking pings to evaluate the Warwick one-metre telescope network availability"""
 
+import os
+import re
 import argparse
 import datetime
-import re
 import subprocess
+import platform
 import Pyro4
 
 PYRO_CONFIG = {
@@ -39,14 +41,23 @@ PING_REGEX = r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
 
 class NetworkPingDaemon:
     """Wraps a ping request to google and ngtshead"""
-    def __init__(self):
+    def __init__(self, instrument):
         self._regex = re.compile(PING_REGEX)
+        self.instrument = instrument
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
-        output = subprocess.check_output(['/usr/bin/ping', '-c1', address], universal_newlines=True,
-                                         timeout=PING_TIMEOUT)
+        ping_str = "-n 1" if  platform.system().lower()=="windows" else "-c 1"
+        output = subprocess.check_output("ping " + ping_str + " " + host)
 
+
+        #if self.instrument == 'onemetre':
+        #    output = subprocess.check_output([PYRO_CONFIG['/usr/bin/ping', '-c1', address],
+        #                                      universal_newlines=True, timeout=PING_TIMEOUT)
+        #else:
+        #output = subprocess.check_output('C:\Windows\system32\ping.exe -n 1 -w {0} {1} '.format(
+        #                                     PING_TIMEOUT*1000,address))
+        
         # The last line of output (ignoring the final newline) contains the ping times
         times = output.split('\n')[-2]
         match = self._regex.match(times)
