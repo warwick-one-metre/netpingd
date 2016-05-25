@@ -39,8 +39,8 @@ PING_TIMEOUT = 2
 PING_REGEX = {
     'onemetre' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
                  + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms',
-    'nites' : r'Minimum = (?P<min>\d+\.\d+)ms, Maximum = (?P<max>\d+\.\d+)ms,' \
-                 + r'Average = (?P<avg>\d+\.\d+)ms' 
+    'nites' : r'    Minimum = (?P<min>\d+)ms, Maximum = (?P<max>\d+)ms, ' \
+                 + r'Average = (?P<avg>\d+)ms' 
     }
 
 class NetworkPingDaemon:
