@@ -54,13 +54,6 @@ class NetworkPingDaemon:
         pltfrm = platform.system().lower()
         ping_str = "-n 1" if  pltfrm=="windows" else "-c 1"
         output = subprocess.check_output("ping " + ping_str + " " + address)
-
-        #if self.instrument == 'onemetre':
-        #    output = subprocess.check_output([PYRO_CONFIG['/usr/bin/ping', '-c1', address],
-        #                                      universal_newlines=True, timeout=PING_TIMEOUT)
-        #else:
-        #output = subprocess.check_output('C:\Windows\system32\ping.exe -n 1 -w {0} {1} '.format(
-        #                                     PING_TIMEOUT*1000,address))
         
         # The last line of output (ignoring the final newline) contains the ping times
         if pltfrm == 'windows':
