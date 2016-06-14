@@ -22,7 +22,6 @@
 
 """Front end checking pings to evaluate the Warwick one-metre telescope network availability"""
 
-import os
 import re
 import argparse
 import datetime
@@ -40,7 +39,7 @@ PING_REGEX = {
     'onemetre' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
                  + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms',
     'nites' : r'    Minimum = (?P<min>\d+)ms, Maximum = (?P<max>\d+)ms, ' \
-                 + r'Average = (?P<avg>\d+)ms' 
+                 + r'Average = (?P<avg>\d+)ms'
     }
 
 class NetworkPingDaemon:
@@ -51,15 +50,12 @@ class NetworkPingDaemon:
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
-        pltfrm = platform.system().lower()
-        ping_str = "-n 1" if  pltfrm=="windows" else "-c 1"
-        output = subprocess.check_output("ping " + ping_str + " " + address)
-        
+        windows = platform.system().lower() == "windows"
+        ping = ["ping", "-n", "1", address] if windows else ["/usr/bin/ping", "-c1", address]
+        output = subprocess.check_output(ping, universal_newlines=True, timeout=PING_TIMEOUT)
+
         # The last line of output (ignoring the final newline) contains the ping times
-        if pltfrm == 'windows':
-            times = output.split('\r\n')[-2]
-        else:
-            times = output.split('\n')[-2]
+        times = output.split('\n')[-2]
         match = self._regex.match(times)
         if match is None:
             raise Exception('Failed to parse ping output: ' + output)
