@@ -1,12 +1,12 @@
 Name:      onemetre-netping-server
 Version:   1.3
-Release:   0
+Release:   1
 Url:       https://github.com/warwick-one-metre/netpingd
 Summary:   Network ping server for the Warwick one-metre telescope.
 License:   GPL-3.0
 Group:     Unspecified
 BuildArch: noarch
-Requires:  python3, python3-Pyro4, %{?systemd_requires}
+Requires:  python3, python3-Pyro4, python3-warwickobservatory, onemetre-obslog-client, %{?systemd_requires}
 BuildRequires: systemd-rpm-macros
 
 %description
