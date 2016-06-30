@@ -1,5 +1,5 @@
 Name:      onemetre-netping-server
-Version:   1.2
+Version:   1.3
 Release:   0
 Url:       https://github.com/warwick-one-metre/netpingd
 Summary:   Network ping server for the Warwick one-metre telescope.
@@ -26,7 +26,6 @@ mkdir -p %{buildroot}%{_unitdir}
 
 %post
 %service_add_post netpingd.service
-%fillup_and_insserv -f -y netpingd.service
 
 %preun
 %stop_on_removal netpingd.service

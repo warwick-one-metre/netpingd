@@ -28,31 +28,34 @@ import datetime
 import subprocess
 import platform
 import Pyro4
+import warwick.observatory as observatory
 
-PYRO_CONFIG = {
-    'nites'    : ('192.168.0.81', 9012, 'nites_netping_daemon'),
-    'onemetre' : ('192.168.0.102', 9012, 'onemetre_netping_daemon')
-    }
+CONFIG = {
+    'nites': observatory.daemons.nites_network_ping,
+    'onemetre': observatory.daemons.onemetre_network_ping
+}
 
 PING_TIMEOUT = 2
 PING_REGEX = {
-    'onemetre' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
+    'posix' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
                  + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms',
-    'nites' : r'    Minimum = (?P<min>\d+)ms, Maximum = (?P<max>\d+)ms, ' \
+    'windows' : r'    Minimum = (?P<min>\d+)ms, Maximum = (?P<max>\d+)ms, ' \
                  + r'Average = (?P<avg>\d+)ms'
-    }
+}
 
 class NetworkPingDaemon:
     """Wraps a ping request to google and ngtshead"""
-    def __init__(self, instrument):
-        self._regex = re.compile(PING_REGEX[instrument])
-        self.instrument = instrument
+    def __init__(self, name):
+        self._name = name
+
+        windows = platform.system().lower() == 'windows'
+        self._regex = re.compile(PING_REGEX['windows' if windows else 'posix'])
+        self._ping = ['ping', '-n', '1'] if windows else ['/usr/bin/ping', '-c1']
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
-        windows = platform.system().lower() == "windows"
-        ping = ["ping", "-n", "1", address] if windows else ["/usr/bin/ping", "-c1", address]
-        output = subprocess.check_output(ping, universal_newlines=True, timeout=PING_TIMEOUT)
+        output = subprocess.check_output(self._ping + [address], universal_newlines=True,
+                                         timeout=PING_TIMEOUT)
 
         # The last line of output (ignoring the final newline) contains the ping times
         times = output.split('\n')[-2]
@@ -62,6 +65,7 @@ class NetworkPingDaemon:
 
         return float(match.group('avg'))
 
+    @Pyro4.expose
     def last_measurement(self):
         """Query the latest valid measurement.
         May return None if no data is available"""
@@ -74,25 +78,13 @@ class NetworkPingDaemon:
         except Exception as exception:
             print('{} ERROR: failed to ping network: {}' \
                   .format(datetime.datetime.utcnow(), str(exception)))
+            observatory.log.error(self._name, 'Failed to ping network (' + str(exception) + ')')
             return None
-
-def spawn_daemon(instrument):
-    """Spawns the daemon and registers it with Pyro"""
-    Pyro4.config.COMMTIMEOUT = 5
-
-    pyro = Pyro4.Daemon(host=PYRO_CONFIG[instrument][0],
-                        port=PYRO_CONFIG[instrument][1])
-    netping = NetworkPingDaemon(instrument)
-    uri = pyro.register(netping, objectId=PYRO_CONFIG[instrument][2])
-
-    print('Starting Network ping daemon with Pyro ID:', uri)
-    pyro.requestLoop()
-    print('Stopping Network ping daemon with Pyro ID:', uri)
 
 if __name__ == '__main__':
     description = 'Net Pinging Server'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('instrument', choices=['onemetre', 'nites'], help='Select an instrument')
     args = parser.parse_args()
-    spawn_daemon(args.instrument)
+    CONFIG[args.instrument].launch(NetworkPingDaemon(args.instrument + '_netpingd'))
 
