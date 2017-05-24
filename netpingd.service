@@ -1,5 +1,5 @@
 [Unit]
-Description=Daemon for exposing google and ngtshead ping times via Pyro.
+Description=Daemon for checking the internal and external network health using ping times.
 After=syslog.target
 Wants=network-online.target
 After=network-online.target
@@ -7,9 +7,9 @@ After=network-online.target
 [Service]
 Restart=on-failure
 Type=simple
-ExecStart=/usr/bin/env python3 -u /usr/bin/netpingd onemetre
-ExecStartPost=/usr/bin/env python3 -u /usr/bin/obslog info onemetre_netpingd Started by systemd
-ExecStopPost=/usr/bin/env python3 -u /usr/bin/obslog info onemetre_netpingd Stopped by systemd
+ExecStart=/usr/bin/env python3 -u /usr/bin/netpingd observatory
+ExecStartPost=/usr/bin/env python3 -u /usr/bin/obslog info observatory_netpingd Started by systemd
+ExecStopPost=/usr/bin/env python3 -u /usr/bin/obslog info observatory_netpingd Stopped by systemd
 StandardOutput=syslog
 StandardError=syslog
 

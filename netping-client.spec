@@ -1,5 +1,5 @@
 Name:      onemetre-netping-client
-Version:   1.2
+Version:   1.3
 Release:   1
 Url:       https://github.com/warwick-one-metre/netpingd
 Summary:   Network ping client for the Warwick one-metre telescope.

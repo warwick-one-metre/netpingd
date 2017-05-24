@@ -20,7 +20,7 @@
 # pylint: disable=no-self-use
 # pylint: disable=invalid-name
 
-"""Front end checking pings to evaluate the Warwick one-metre telescope network availability"""
+"""Front end checking the internal and external network health using ping times."""
 
 import re
 import argparse
@@ -34,9 +34,20 @@ import warwick.observatory as observatory
 
 CONFIG = {
     'nites': observatory.daemons.nites_network_ping,
-    'onemetre': observatory.daemons.onemetre_network_ping
+    'observatory': observatory.daemons.observatory_network_ping
 }
 
+PING_TARGETS = {
+    'ngtshead': '10.2.6.250',
+    'google': 'www.google.com',
+    'onemetre': '10.2.6.202', # Main NUC in the w1m dome rack
+    'goto': '10.2.6.6', # Cisco switch in the goto dome rack
+    'nites': '10.2.6.181', # TCS in the NITES dome
+    'swasp': '192.168.0.53', # Monitor machine in SWASP
+    'swasp_gateway': '192.168.0.1' # Machine in the WHT
+}
+
+# This should be greater than PING_TIMEOUT * len(PING_TARGETS)
 PING_LOOP = 30
 
 PING_TIMEOUT = 2
@@ -65,18 +76,26 @@ class NetworkPingDaemon:
     def __run_thread(self):
         """Run loop for monitoring the hardware daemon"""
         while True:
-            try:
-                self._latest = {
-                    'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                    'ngtshead': self.ping('ngtshead.warwick.ac.uk'),
-                    'google': self.ping('www.google.com'),
-                }
-            except Exception as exception:
-                print('{} ERROR: failed to ping network: {}' \
-                      .format(datetime.datetime.utcnow(), str(exception)))
-                observatory.log.error(self._name, 'Failed to ping network (' + str(exception) + ')')
+            start = datetime.datetime.utcnow()
 
-            time.sleep(PING_LOOP)
+            latest = {
+                'date': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            for target in PING_TARGETS:
+                try:
+                    latest[target] = self.ping(PING_TARGETS[target])
+                except Exception as exception:
+                    latest[target] = -1
+
+                    print('{} ERROR: failed to ping {}: {}' \
+                          .format(datetime.datetime.utcnow(), target, str(exception)))
+                    observatory.log.error(self._name, 'Failed to ping ' + target + ' (' + \
+                                                       str(exception) + ')')
+
+            self._latest = latest
+            end = datetime.datetime.utcnow()
+            time.sleep(PING_LOOP - (end - start).total_seconds())
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
@@ -98,9 +117,8 @@ class NetworkPingDaemon:
         return self._latest
 
 if __name__ == '__main__':
-    description = 'Net Pinging Server'
+    description = 'Network monitoring server'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('instrument', choices=['onemetre', 'nites'], help='Select an instrument')
+    parser.add_argument('instrument', choices=CONFIG.keys(), help='Select an instrument')
     args = parser.parse_args()
     CONFIG[args.instrument].launch(NetworkPingDaemon(args.instrument + '_netpingd'))
-

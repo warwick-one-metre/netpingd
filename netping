@@ -27,11 +27,19 @@ import warwick.observatory as observatory
 SCRIPT_NAME = os.path.basename(sys.argv[0])
 sys.excepthook = Pyro4.util.excepthook
 
+def format_ping(ms):
+    """Formats a ping time for human-readable display"""
+    if ms < 0:
+        return '\033[91m\033[1mOFFLINE\033[0m'
+    if ms < 10:
+        return '\033[1m{:.0f} us\033[0m'.format(round(1000*ms))
+    return '\033[1m{:.0f} ms\033[0m'.format(round(ms))
+
 def print_status():
     """Prints the latest data in human-readable form"""
     latest = None
     try:
-        with observatory.daemons.onemetre_network_ping.connect() as netping:
+        with observatory.daemons.observatory_network_ping.connect() as netping:
             latest = netping.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with the network ping daemon')
@@ -40,9 +48,15 @@ def print_status():
     if latest is not None:
         date = datetime.datetime.strptime(latest['date'], '%Y-%m-%dT%H:%M:%SZ')
         print('Data received \033[1m{}\033[0m:'.format(date))
-        print('          Google: \033[1m{:.1f} ms\033[0m'.format(latest['google']))
-        print('        NGTSHead: \033[1m{:.1f} ms\033[0m'.format(latest['ngtshead']))
-        print()
+        print('        External:')
+        print('          Google: ' + format_ping(latest['google']))
+        print('        NGTSHead: ' + format_ping(latest['ngtshead']))
+        print('        Internal:')
+        print('             W1m: ' + format_ping(latest['onemetre']))
+        print('           NITES: ' + format_ping(latest['nites']))
+        print('            GOTO: ' + format_ping(latest['goto']))
+        print('           SWASP: ' + format_ping(latest['swasp']))
+        print('             WHT: ' + format_ping(latest['swasp_gateway']))
     else:
         print('error: failed to query data')
 
@@ -52,7 +66,7 @@ def print_json():
     """Prints the latest data in machine-readable form"""
     latest = None
     try:
-        with observatory.daemons.onemetre_network_ping.connect() as netping:
+        with observatory.daemons.observatory_network_ping.connect() as netping:
             latest = netping.last_measurement()
     except Pyro4.errors.CommunicationError:
         print('error: unable to communicate with the network ping daemon')

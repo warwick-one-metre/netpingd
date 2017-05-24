@@ -1,5 +1,5 @@
 Name:      onemetre-netping-server
-Version:   1.4
+Version:   1.5
 Release:   0
 Url:       https://github.com/warwick-one-metre/netpingd
 Summary:   Network ping server for the Warwick one-metre telescope.
@@ -12,7 +12,7 @@ BuildRequires: systemd-rpm-macros
 %description
 Part of the observatory software for the Warwick one-meter telescope.
 
-netpingd is a Pyro frontend for checking the google and ngtshead ping times.
+netpingd is a Pyro frontend for checking the internal and external network health using ping times.
 
 %build
 mkdir -p %{buildroot}%{_bindir}
