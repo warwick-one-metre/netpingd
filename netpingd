@@ -41,7 +41,7 @@ PING_TARGETS = {
     'ngtshead': '10.2.6.250',
     'google': 'www.google.com',
     'onemetre': '10.2.6.202', # Main NUC in the w1m dome rack
-    'goto': '10.2.6.6', # Cisco switch in the goto dome rack
+    'goto': '10.2.6.9', # Left NUC in the GOTO rack
     'nites': '10.2.6.181', # TCS in the NITES dome
     'swasp': '192.168.0.53', # Monitor machine in SWASP
     'swasp_gateway': '192.168.0.1' # Machine in the WHT
