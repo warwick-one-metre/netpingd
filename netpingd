@@ -70,14 +70,23 @@ class NetworkPingDaemon:
             for target in PING_TARGETS:
                 try:
                     latest[target] = self.ping(PING_TARGETS[target])
+
+                    last = self._latest[target] if self._latest is not None \
+                        and target in self._latest else -2
+                    if last < 0:
+                        prefix = 'Restored' if last == -1 else 'Established'
+                        observatory.log.info('observatory_netpingd', prefix + ' contact with ' \
+                                              + target)
                 except Exception as exception:
                     latest[target] = -1
 
                     print('{} ERROR: failed to ping {}: {}' \
                           .format(datetime.datetime.utcnow(), target, str(exception)))
-                    observatory.log.error('observatory_netpingd', 'Failed to ping ' + target \
-                                          + ' (' + str(exception) + ')')
 
+                    if self._latest is None or target not in self._latest \
+                            or self._latest[target] != -1:
+                        observatory.log.error('observatory_netpingd', 'Lost contact with ' \
+                                              + target + ' (' + str(exception) + ')')
             self._latest = latest
             end = datetime.datetime.utcnow()
             time.sleep(PING_LOOP - (end - start).total_seconds())
