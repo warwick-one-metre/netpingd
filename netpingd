@@ -23,19 +23,12 @@
 """Front end checking the internal and external network health using ping times."""
 
 import re
-import argparse
 import datetime
 import subprocess
-import platform
 import threading
 import time
 import Pyro4
 import warwick.observatory as observatory
-
-CONFIG = {
-    'nites': observatory.daemons.nites_network_ping,
-    'observatory': observatory.daemons.observatory_network_ping
-}
 
 PING_TARGETS = {
     'ngtshead': '10.2.6.250',
@@ -51,22 +44,14 @@ PING_TARGETS = {
 PING_LOOP = 30
 
 PING_TIMEOUT = 2
-PING_REGEX = {
-    'posix' : r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
-                 + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms',
-    'windows' : r'    Minimum = (?P<min>\d+)ms, Maximum = (?P<max>\d+)ms, ' \
-                 + r'Average = (?P<avg>\d+)ms'
-}
+PING_REGEX = r'rtt min/avg/max/mdev = (?P<min>\d+\.\d+)/(?P<avg>\d+\.\d+)/' \
+                 + r'(?P<max>\d+\.\d+)/(?P<mdev>\d+\.\d+) ms'
 
 class NetworkPingDaemon:
     """Wraps a ping request to google and ngtshead"""
-    def __init__(self, name):
-        self._name = name
+    def __init__(self):
         self._latest = None
-
-        windows = platform.system().lower() == 'windows'
-        self._regex = re.compile(PING_REGEX['windows' if windows else 'posix'])
-        self._ping = ['ping', '-n', '1'] if windows else ['/usr/bin/ping', '-c1']
+        self._regex = re.compile(PING_REGEX)
 
         # Polls the network from a background thread
         runloop = threading.Thread(target=self.__run_thread)
@@ -90,8 +75,8 @@ class NetworkPingDaemon:
 
                     print('{} ERROR: failed to ping {}: {}' \
                           .format(datetime.datetime.utcnow(), target, str(exception)))
-                    observatory.log.error(self._name, 'Failed to ping ' + target + ' (' + \
-                                                       str(exception) + ')')
+                    observatory.log.error('observatory_netpingd', 'Failed to ping ' + target \
+                                          + ' (' + str(exception) + ')')
 
             self._latest = latest
             end = datetime.datetime.utcnow()
@@ -99,7 +84,7 @@ class NetworkPingDaemon:
 
     def ping(self, address):
         """Ping an address and return the rtt time in milliseconds"""
-        output = subprocess.check_output(self._ping + [address], universal_newlines=True,
+        output = subprocess.check_output(['/usr/bin/ping', '-c1', address], universal_newlines=True,
                                          timeout=PING_TIMEOUT)
 
         # The last line of output (ignoring the final newline) contains the ping times
@@ -117,8 +102,4 @@ class NetworkPingDaemon:
         return self._latest
 
 if __name__ == '__main__':
-    description = 'Network monitoring server'
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('instrument', choices=CONFIG.keys(), help='Select an instrument')
-    args = parser.parse_args()
-    CONFIG[args.instrument].launch(NetworkPingDaemon(args.instrument + '_netpingd'))
+    observatory.daemons.observatory_network_ping.launch(NetworkPingDaemon())
