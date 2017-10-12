@@ -6,8 +6,8 @@ RPMBUILD = rpmbuild --define "_topdir %(pwd)/build" \
 
 all:
 	mkdir -p build
-	${RPMBUILD} -ba netping-server.spec
-	${RPMBUILD} -ba netping-client.spec
+	${RPMBUILD} -ba observatory-netping-server.spec
+	${RPMBUILD} -ba observatory-netping-client.spec
 	mv build/noarch/*.rpm .
 	rm -rf build
 
