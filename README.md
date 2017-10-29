@@ -20,6 +20,12 @@ The service will automatically start on system boot, or you can start it immedia
 sudo systemctl start roomalertd.service
 ```
 
+Finally, open a port in the firewall so that other machines on the network can access the daemon:
+```
+sudo firewall-cmd --zone=public --add-port=9012/tcp --permanent
+sudo firewall-cmd --reload
+```
+
 ### Hardware Setup
 
 The IPs for the ping targets are hardcoded in `netpingd`.
