@@ -10,14 +10,14 @@ See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Sof
 
 ### Software Setup
 
-After installing `onemetre-roomalert-server`, the `roomalertd` must be enabled using:
+After installing `observatory-netping-server`, the `netpingd` must be enabled using:
 ```
-sudo systemctl enable roomalertd.service
+sudo systemctl enable netpingd.service
 ```
 
 The service will automatically start on system boot, or you can start it immediately using:
 ```
-sudo systemctl start roomalertd.service
+sudo systemctl start netpingd.service
 ```
 
 Finally, open a port in the firewall so that other machines on the network can access the daemon:
