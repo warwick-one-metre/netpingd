@@ -70,6 +70,7 @@ class NetworkPingDaemon:
             for target in PING_TARGETS:
                 try:
                     latest[target] = self.ping(PING_TARGETS[target])
+                    latest[target + '_valid'] = True
 
                     last = self._latest[target] if self._latest is not None \
                         and target in self._latest else -2
@@ -79,6 +80,7 @@ class NetworkPingDaemon:
                                               + target)
                 except Exception as exception:
                     latest[target] = -1
+                    latest[target + '_valid'] = False
 
                     print('{} ERROR: failed to ping {}: {}' \
                           .format(datetime.datetime.utcnow(), target, str(exception)))
