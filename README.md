@@ -1,12 +1,12 @@
-## Observatory network ping daemon [![Travis CI build status](https://travis-ci.org/warwick-one-metre/netpingd.svg?branch=master)](https://travis-ci.org/warwick-one-metre/netpingd)
+## Observatory network ping daemon
 
-Part of the observatory software for the Warwick one-meter, NITES, and GOTO telescopes.
+Part of the observatory software for the Warwick La Palma telescopes.
 
 `netpingd` regularly pings machines on the network and caches the connectivity status.
 
 `netping` is a commandline utility that reports the latest network status
 
-See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Software-Infrastructure) for an overview of the W1m software architecture and instructions for developing and deploying the code.
+See [Software Infrastructure](https://github.com/warwick-one-metre/docs/wiki/Software-Infrastructure) for an overview of the observatory software architecture and instructions for developing and deploying the code.
 
 ### Software Setup
 

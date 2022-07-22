@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 #
 # This file is part of netpingd.
 #
@@ -55,7 +55,7 @@ def print_status():
         print('        NGTSHead: ' + format_ping(latest['ngtshead']))
         print('        Internal:')
         print('             W1m: ' + format_ping(latest['onemetre']))
-        print('           NITES: ' + format_ping(latest['nites']))
+        print('           CLASP: ' + format_ping(latest['nites']))
         print('            GOTO: ' + format_ping(latest['goto']))
         print('           SWASP: ' + format_ping(latest['swasp']))
         print('             WHT: ' + format_ping(latest['swasp_gateway']))
