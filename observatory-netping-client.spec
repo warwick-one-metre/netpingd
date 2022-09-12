@@ -1,5 +1,5 @@
 Name:      observatory-netping-client
-Version:   2.1.1
+Version:   20220912
 Release:   0
 Url:       https://github.com/warwick-one-metre/netpingd
 Summary:   Network ping client for the Warwick one-metre telescope.

@@ -55,7 +55,7 @@ def print_status():
         print('        NGTSHead: ' + format_ping(latest['ngtshead']))
         print('        Internal:')
         print('             W1m: ' + format_ping(latest['onemetre']))
-        print('           CLASP: ' + format_ping(latest['nites']))
+        print('           CLASP: ' + format_ping(latest['clasp']))
         print('            GOTO: ' + format_ping(latest['goto']))
         print('           SWASP: ' + format_ping(latest['swasp']))
         print('             WHT: ' + format_ping(latest['swasp_gateway']))
